@@ -13,5 +13,7 @@
     public string apiKey { get; set; }
     public string apiURL { get; set; }
 
+    public string payer_name { get; set; }
+
   }
 }

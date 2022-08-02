@@ -17,7 +17,7 @@ namespace Provider
         public override void InitGateway(Hashtable settings)
         {
             // TODO: Выполнить инициализацию шлюза.
-            GlobalContainer.ReadContext(settings);
+            GlobalContainer.ContextToGlobalContainer(settings);
 
             switch (GlobalContainer.settFields.TraceLog)
             {
@@ -35,7 +35,7 @@ namespace Provider
         /// <param name="context"></param>
         public override void CheckAccount(ref Context context)
         {
-            GlobalContainer.ReadContext(context);
+            GlobalContainer.ContextToGlobalContainer(context);
 
             StemAPI stemAPI = new StemAPI();
             try
@@ -60,7 +60,7 @@ namespace Provider
 
         public override void Process(ref Context context)
         {
-            GlobalContainer.ReadContext(context);
+            GlobalContainer.ContextToGlobalContainer(context);
 
             StemAPI stemAPI = new StemAPI();
             try

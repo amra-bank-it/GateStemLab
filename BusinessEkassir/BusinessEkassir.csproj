@@ -73,8 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Basic\Gateway.cs" />
-    <Compile Include="Basic\Provider\Adapter\CheckReq.cs" />
-    <Compile Include="Basic\Provider\Adapter\PayReq.cs" />
+    <Compile Include="Basic\Provider\Adapter\API.cs" />
     <Compile Include="Basic\Provider\Base\BaseStemAPI.cs" />
     <Compile Include="Basic\Provider\Models\RespCheck.cs" />
     <Compile Include="Basic\Provider\Models\RespPay.cs" />
