@@ -38,7 +38,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>\\10.55.31.52\gates\JKH\</OutputPath>
+    <OutputPath>\\10.55.31.52\gates\GateStemLab\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -77,6 +77,7 @@
     <Compile Include="Basic\Provider\Adapter\PayReq.cs" />
     <Compile Include="Basic\Provider\Base\BaseStemAPI.cs" />
     <Compile Include="Basic\Provider\Models\RespCheck.cs" />
+    <Compile Include="Basic\Provider\Models\RespPay.cs" />
     <Compile Include="Model\ClientFields.cs" />
     <Compile Include="Model\CollectionEnum.cs" />
     <Compile Include="Model\GlobalContainer.cs" />

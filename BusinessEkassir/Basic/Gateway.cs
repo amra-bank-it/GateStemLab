@@ -7,152 +7,174 @@ using System.Collections;
 
 namespace Provider
 {
-  public static class DebugMode
-  {
-    public static bool ON;
-  }
-  public class GatewayCore : GatewayCoreBase
-  {
-
-    public override void InitGateway(Hashtable settings)
+    public static class DebugMode
     {
-      // TODO: Выполнить инициализацию шлюза.
-      GlobalContainer.ReadContext(settings);
-
-      switch (GlobalContainer.settFields.TraceLog)
-      {
-        case 0: break;
-        case 1: break;
-        default: break;
-      }
-
+        public static bool ON;
     }
-
-
-    /// <summary>
-    /// Выполнение стадий проверки у поставщика
-    /// </summary>
-    /// <param name="context"></param>
-    public override void CheckAccount(ref Context context)
-    {
-      GlobalContainer.ReadContext(context);
-      GlobalContainer.WriteContext(ref context);
-
-      StemAPI stemAPI = new StemAPI();
-      try
-      {
-        stemAPI.Check();
-      }
-      catch (Exception err)
-      {
-        context.Description = ""+ err.ToString();
-        context.Status = State.AccountNotExists;
-      }
-
-      context.Description = "OK";
-      context.Status = State.AccountExists;
-
-    }
-
-
-    public override void Process(ref Context context)
+    public class GatewayCore : GatewayCoreBase
     {
 
+        public override void InitGateway(Hashtable settings)
+        {
+            // TODO: Выполнить инициализацию шлюза.
+            GlobalContainer.ReadContext(settings);
+
+            switch (GlobalContainer.settFields.TraceLog)
+            {
+                case 0: break;
+                case 1: break;
+                default: break;
+            }
+
+        }
+
+
+        /// <summary>
+        /// Выполнение стадий проверки у поставщика
+        /// </summary>
+        /// <param name="context"></param>
+        public override void CheckAccount(ref Context context)
+        {
+            GlobalContainer.ReadContext(context);
+
+            StemAPI stemAPI = new StemAPI();
+            try
+            {
+                stemAPI.Check();
+            }
+            catch (Exception err)
+            {
+                context.Description = "" + err.ToString();
+                context.Status = State.AccountNotExists;
+                GlobalContainer.WriteContext(ref context);
+                return;
+            }
+
+
+            GlobalContainer.WriteContext(ref context);
+            context.Description = "OK";
+            context.Status = State.AccountExists;
+
+        }
+
+
+        public override void Process(ref Context context)
+        {
+            GlobalContainer.ReadContext(context);
+
+            StemAPI stemAPI = new StemAPI();
+            try
+            {
+                stemAPI.Pay();
+            }
+            catch (Exception err)
+            {
+                context.Description = "" + err.ToString();
+                context.Status = State.Rejected;
+                GlobalContainer.WriteContext(ref context);
+                return;
+            }
+
+
+            GlobalContainer.WriteContext(ref context);
+            context.Description = "OK";
+            context.Status = State.Finalized;
+
+        }
+
+
+        /// <summary>
+        /// Проверить состояние платежа.
+        /// </summary>
+        /// <param name="context">
+        /// Контектс ядра.
+        /// </param>
+        public override void CheckProcessStatus(ref Context context)
+        {
+
+        }
+
+        /// <summary>
+        /// Отозвать платеж.
+        /// </summary>
+        /// <param name="context">
+        /// Контекст ядра.
+        /// </param>
+        public override void RecallPayment(ref Context context)
+        {
+            // TODO: Получить из контектса ядра необходимые аргументы и проверить состояние платежа.
+            // Например:
+            // string paySystemNumber = ((int)context["PaymentContext.Payment.Serial"]).ToString();
+            // Result result = gatewayApi.Recall(paySystemNumber);
+            //
+            // switch (result.AcceptStatus)
+            // {
+            //     case AcceptStatus.PayStatusAbandoning:
+            //         // Платеж отзывается.
+            //         context.Status = State.Recalling;
+            //         context.Description = e.UnsuccessfulResponse.AcceptNote;
+            //         return;
+            //     default:
+            //         // Неудачный отзыв.
+            //         context.Status = State.Finalized;
+            //         context.Description = e.UnsuccessfulResponse.AcceptNote;
+            //         return;
+            // }
+
+            // Если не произошло исключений, то сообщить об успехе операции.
+            //
+
+            //context.Status = State.Rejected;
+        }
+        public override void CheckRecallStatus(ref Context context)
+        {
+            //CheckProcessStatus(ref context);
+        }
+        public override void Dispose() { }
+        public override Hashtable SaveSettings()
+        {
+            return null;
+        }
+
+        public override bool CanRecallPayment(ref Context context)
+        {
+
+            return false;
+        }
+
     }
-
-
-    /// <summary>
-    /// Проверить состояние платежа.
-    /// </summary>
-    /// <param name="context">
-    /// Контектс ядра.
-    /// </param>
-    public override void CheckProcessStatus(ref Context context)
-    {
-
-    }
-
-    /// <summary>
-    /// Отозвать платеж.
-    /// </summary>
-    /// <param name="context">
-    /// Контекст ядра.
-    /// </param>
-    public override void RecallPayment(ref Context context)
-    {
-      // TODO: Получить из контектса ядра необходимые аргументы и проверить состояние платежа.
-      // Например:
-      // string paySystemNumber = ((int)context["PaymentContext.Payment.Serial"]).ToString();
-      // Result result = gatewayApi.Recall(paySystemNumber);
-      //
-      // switch (result.AcceptStatus)
-      // {
-      //     case AcceptStatus.PayStatusAbandoning:
-      //         // Платеж отзывается.
-      //         context.Status = State.Recalling;
-      //         context.Description = e.UnsuccessfulResponse.AcceptNote;
-      //         return;
-      //     default:
-      //         // Неудачный отзыв.
-      //         context.Status = State.Finalized;
-      //         context.Description = e.UnsuccessfulResponse.AcceptNote;
-      //         return;
-      // }
-
-      // Если не произошло исключений, то сообщить об успехе операции.
-      //
-
-      //context.Status = State.Rejected;
-    }
-    public override void CheckRecallStatus(ref Context context)
-    {
-      //CheckProcessStatus(ref context);
-    }
-    public override void Dispose() { }
-    public override Hashtable SaveSettings()
-    {
-      return null;
-    }
-
-    public override bool CanRecallPayment(ref Context context)
-    {
-
-      return false;
-    }
-
-  }
 
 }
 namespace ComplexLogger
 {
-  public enum L_Mode
-  {
-    TestPlatform
+    public enum L_Mode
+    {
+        TestPlatform
             , Release
             , debugFULL
-  }
-  public static class mLogger
-  {
-    public static L_Mode mode;
+    }
+    public static class mLogger
+    {
+        public static L_Mode mode;
 
-    public static void changeMode(L_Mode inmode)
-    {
-      mode = inmode;
+        public static void changeMode(L_Mode inmode)
+        {
+            mode = inmode;
+        }
+        public static void WriteMessage(string text)
+        {
+            if (mode == L_Mode.debugFULL)
+            {
+                Logger.Instance.WriteMessage(text, 1); return;
+            }
+            Console.WriteLine(text);
+        }
+        public static void WriteMessageDBG(string text)
+        {
+            if (mode == L_Mode.debugFULL)
+            {
+                Logger.Instance.WriteMessage(text, 1); return;
+            }
+        }
     }
-    public static void WriteMessage(string text)
-    {
-      if (mode == L_Mode.debugFULL)
-      {
-        Logger.Instance.WriteMessage(text, 1); return;
-      }
-      Console.WriteLine(text);
-    }
-    public static void WriteMessageDBG(string text)
-    {
-      if (mode == L_Mode.debugFULL)
-      {
-        Logger.Instance.WriteMessage(text, 1); return;
-      }
-    }
-  }
 }

@@ -46,7 +46,7 @@
       <HintPath>..\packages\Oracle.ManagedDataAccess.19.13.0\lib\net40\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="SDKGatewayLibrary">
-      <HintPath>..\InterFaceEkassir\SDKGatewayLibrary.dll</HintPath>
+      <HintPath>..\BusinessEkassir\SDKGatewayLibrary.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />

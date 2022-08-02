@@ -6,7 +6,7 @@ using Provider.Model;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections;
-using Provider.Exceptions;
+//using Provider.Exceptions;
 
 namespace TestGateWay
 {
@@ -38,14 +38,19 @@ namespace TestGateWay
                     context.Add(GlobalContainer.PaymentContext("Id"), Guid.NewGuid());
                     context.Add(GlobalContainer.PaymentContext("Serial"), ttt);
                     context.Add(GlobalContainer.PaymentContext("ServerTime"), DateTime.Now);
-                    context.Add(GlobalContainer.PaymentContext("Account"), "1518000000001");
+                    context.Add(GlobalContainer.PaymentContext("Account"), "209");
+                    context.Add(GlobalContainer.PaymentContext("branch"), "1");
                     //context.Add(contextServices.PaymentContext("DebtElev"), "0");
                     //context.Add(contextServices.PaymentContext("typeBlocked"), "О");
                     //context.Add(contextServices.PaymentContext("Purpose"), "Блокируем потому что так надо было (тесты)");
 
                     Hashtable RFR = new Hashtable();
+                    RFR.Add("userName", "dameyjonua@yandex.ru");
+                    RFR.Add("apiKey", "1dcf4102-bdf2-11eb-b74c-ac1f6b4782be");
+                    RFR.Add("apiURL", "https://localhost:7267");
                     RFR.Add("TraceLog", "0");
                     RFR.Add("SentryUrl", @"https://932e9e7e53db416ca2502fb326160a2c@sentry.asar.studio/17");
+                    
 
                     //Тестируем работу модуля настройки шлюза
                     SettingManager settingM = new SettingManager();
@@ -56,6 +61,7 @@ namespace TestGateWay
 
                     //Тестируем работу проведения платежа
                     gateway.CheckAccount(ref context);
+                    gateway.Process(ref context);
 
 
                     int rer = 0;
