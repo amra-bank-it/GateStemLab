@@ -1,180 +1,178 @@
 ﻿//----------------------------------------
+using BusinessEkassir.Basic.Tools;
+using ComplexLogger;
 using IBP.SDKGatewayLibrary;
 using InterFaceEkassir.Basic.Provider.Base;
 using Provider.Model;
 using System;
 using System.Collections;
+using System.Reflection;
+using TypeModeLogger;
 
 namespace Provider
 {
-    public static class DebugMode
+  public class GatewayCore : GatewayCoreBase
+  {
+
+    public override void InitGateway(Hashtable settings)
     {
-        public static bool ON;
+      // TODO: Выполнить инициализацию шлюза.
+      GlobalContainer.ContextToGlobalContainer(settings);
+
+      switch (GlobalContainer.settFields.TraceLog)
+      {
+        case 1: MeLogger.Init(informationPrint.Trace); break;
+        default: MeLogger.Init(informationPrint.Release); break;
+      }
     }
-    public class GatewayCore : GatewayCoreBase
+    public void InitGateway(Hashtable settings, sourcePrint prints = sourcePrint.Ekassir)
+    {
+      // TODO: Выполнить инициализацию шлюза.
+      MeLogger.Init(informationPrint.Trace, prints);
+      GlobalContainer.ContextToGlobalContainer(settings);
+
+      switch (GlobalContainer.settFields.TraceLog)
+      {
+        case 1: MeLogger.Init(informationPrint.Trace, prints); break;
+        default: MeLogger.Init(informationPrint.Release, prints); break;
+      }
+    }
+
+
+    /// <summary>
+    /// Выполнение стадий проверки у поставщика
+    /// </summary>
+    /// <param name="context"></param>
+    public override void CheckAccount(ref Context context)
     {
 
-        public override void InitGateway(Hashtable settings)
-        {
-            // TODO: Выполнить инициализацию шлюза.
-            GlobalContainer.ContextToGlobalContainer(settings);
+      Tracing.Context(context, MethodBase.GetCurrentMethod().Name);
 
-            switch (GlobalContainer.settFields.TraceLog)
-            {
-                case 0: break;
-                case 1: break;
-                default: break;
-            }
+      GlobalContainer.ContextToGlobalContainer(context);
 
-        }
+      TracingAccInRealese(MethodBase.GetCurrentMethod().Name);
 
+      StemAPI stemAPI = new StemAPI();
+      try
+      {
+        stemAPI.Check();
+      }
+      catch (Exception err)
+      {
+        context.Description = "" + err.ToString();
+        context.Status = State.AccountNotExists;
+        TracingAccInRealese(MethodBase.GetCurrentMethod().Name,context);
+        GlobalContainer.WriteContext(ref context);
+        return;
+      }
 
-        /// <summary>
-        /// Выполнение стадий проверки у поставщика
-        /// </summary>
-        /// <param name="context"></param>
-        public override void CheckAccount(ref Context context)
-        {
-            GlobalContainer.ContextToGlobalContainer(context);
-
-            StemAPI stemAPI = new StemAPI();
-            try
-            {
-                stemAPI.Check();
-            }
-            catch (Exception err)
-            {
-                context.Description = "" + err.ToString();
-                context.Status = State.AccountNotExists;
-                GlobalContainer.WriteContext(ref context);
-                return;
-            }
-
-
-            GlobalContainer.WriteContext(ref context);
-            context.Description = "OK";
-            context.Status = State.AccountExists;
-
-        }
-
-
-        public override void Process(ref Context context)
-        {
-            GlobalContainer.ContextToGlobalContainer(context);
-
-            StemAPI stemAPI = new StemAPI();
-            try
-            {
-                stemAPI.Pay();
-            }
-            catch (Exception err)
-            {
-                context.Description = "" + err.ToString();
-                context.Status = State.Rejected;
-                GlobalContainer.WriteContext(ref context);
-                return;
-            }
-
-
-            GlobalContainer.WriteContext(ref context);
-            context.Description = "OK";
-            context.Status = State.Finalized;
-
-        }
-
-
-        /// <summary>
-        /// Проверить состояние платежа.
-        /// </summary>
-        /// <param name="context">
-        /// Контектс ядра.
-        /// </param>
-        public override void CheckProcessStatus(ref Context context)
-        {
-
-        }
-
-        /// <summary>
-        /// Отозвать платеж.
-        /// </summary>
-        /// <param name="context">
-        /// Контекст ядра.
-        /// </param>
-        public override void RecallPayment(ref Context context)
-        {
-            // TODO: Получить из контектса ядра необходимые аргументы и проверить состояние платежа.
-            // Например:
-            // string paySystemNumber = ((int)context["PaymentContext.Payment.Serial"]).ToString();
-            // Result result = gatewayApi.Recall(paySystemNumber);
-            //
-            // switch (result.AcceptStatus)
-            // {
-            //     case AcceptStatus.PayStatusAbandoning:
-            //         // Платеж отзывается.
-            //         context.Status = State.Recalling;
-            //         context.Description = e.UnsuccessfulResponse.AcceptNote;
-            //         return;
-            //     default:
-            //         // Неудачный отзыв.
-            //         context.Status = State.Finalized;
-            //         context.Description = e.UnsuccessfulResponse.AcceptNote;
-            //         return;
-            // }
-
-            // Если не произошло исключений, то сообщить об успехе операции.
-            //
-
-            //context.Status = State.Rejected;
-        }
-        public override void CheckRecallStatus(ref Context context)
-        {
-            //CheckProcessStatus(ref context);
-        }
-        public override void Dispose() { }
-        public override Hashtable SaveSettings()
-        {
-            return null;
-        }
-
-        public override bool CanRecallPayment(ref Context context)
-        {
-
-            return false;
-        }
+      GlobalContainer.WriteContext(ref context);
+      context.Description = "OK";
+      context.Status = State.AccountExists;
+      TracingAccInRealese(MethodBase.GetCurrentMethod().Name,context);
 
     }
 
-}
-namespace ComplexLogger
-{
-    public enum L_Mode
+    private static void TracingAccInRealese(string typeMethod)
     {
-        TestPlatform
-            , Release
-            , debugFULL
+      MeLogger.WriteMessage($"Стадия Проверки Аккаунта {GlobalContainer.srvFields.Account}", informationPrint.Release);
     }
-    public static class mLogger
-    {
-        public static L_Mode mode;
 
-        public static void changeMode(L_Mode inmode)
-        {
-            mode = inmode;
-        }
-        public static void WriteMessage(string text)
-        {
-            if (mode == L_Mode.debugFULL)
-            {
-                Logger.Instance.WriteMessage(text, 1); return;
-            }
-            Console.WriteLine(text);
-        }
-        public static void WriteMessageDBG(string text)
-        {
-            if (mode == L_Mode.debugFULL)
-            {
-                Logger.Instance.WriteMessage(text, 1); return;
-            }
-        }
+    private static void TracingAccInRealese(string typeMethod, Context context)
+    {
+      MeLogger.WriteMessage($"Результат Стадии Проверки Аккаунта {GlobalContainer.srvFields.Account}:{context.Status.ToString()}/Описание:{context.Description}", informationPrint.Release);
     }
+
+    public override void Process(ref Context context)
+    {
+      Tracing.Context(context, "Process");
+
+      GlobalContainer.ContextToGlobalContainer(context);
+
+      TracingAccInRealese(MethodBase.GetCurrentMethod().Name);
+
+      StemAPI stemAPI = new StemAPI();
+      try
+      {
+        stemAPI.Pay();
+      }
+      catch (Exception err)
+      {
+        context.Description = "" + err.ToString();
+        context.Status = State.Rejected;
+        TracingAccInRealese(MethodBase.GetCurrentMethod().Name, context);
+        GlobalContainer.WriteContext(ref context);
+        return;
+      }
+
+
+      GlobalContainer.WriteContext(ref context);
+      context.Description = "OK";
+      context.Status = State.Finalized;
+      TracingAccInRealese(MethodBase.GetCurrentMethod().Name, context);
+
+    }
+
+
+    /// <summary>
+    /// Проверить состояние платежа.
+    /// </summary>
+    /// <param name="context">
+    /// Контектс ядра.
+    /// </param>
+    public override void CheckProcessStatus(ref Context context)
+    {
+
+    }
+
+    /// <summary>
+    /// Отозвать платеж.
+    /// </summary>
+    /// <param name="context">
+    /// Контекст ядра.
+    /// </param>
+    public override void RecallPayment(ref Context context)
+    {
+      // TODO: Получить из контектса ядра необходимые аргументы и проверить состояние платежа.
+      // Например:
+      // string paySystemNumber = ((int)context["PaymentContext.Payment.Serial"]).ToString();
+      // Result result = gatewayApi.Recall(paySystemNumber);
+      //
+      // switch (result.AcceptStatus)
+      // {
+      //     case AcceptStatus.PayStatusAbandoning:
+      //         // Платеж отзывается.
+      //         context.Status = State.Recalling;
+      //         context.Description = e.UnsuccessfulResponse.AcceptNote;
+      //         return;
+      //     default:
+      //         // Неудачный отзыв.
+      //         context.Status = State.Finalized;
+      //         context.Description = e.UnsuccessfulResponse.AcceptNote;
+      //         return;
+      // }
+
+      // Если не произошло исключений, то сообщить об успехе операции.
+      //
+
+      //context.Status = State.Rejected;
+    }
+    public override void CheckRecallStatus(ref Context context)
+    {
+      //CheckProcessStatus(ref context);
+    }
+    public override void Dispose() { }
+    public override Hashtable SaveSettings()
+    {
+      return null;
+    }
+
+    public override bool CanRecallPayment(ref Context context)
+    {
+
+      return false;
+    }
+
+  }
+
 }

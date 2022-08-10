@@ -1,4 +1,5 @@
-﻿using InterFaceEkassir.Basic.Provider.Models;
+﻿using ComplexLogger;
+using InterFaceEkassir.Basic.Provider.Models;
 using Newtonsoft.Json;
 using Provider.Model;
 using RestSharp;
@@ -13,15 +14,19 @@ namespace InterFaceEkassir.Basic.Provider.Adapter
     {
       try
       {
+        MeLogger.WriteMessage($"Отправляем запрос:{BaseURL + resourceURL}");
+        
         var client = new RestClient(BaseURL);
-        var request = new RestRequest(resourceURL, Method.Get);
+        var request = new RestRequest(resourceURL, Method.GET);
 
-        RestResponse response;
+        IRestResponse response;
         response = client.Execute(request);
 
         CorrectStatusCode(response);
 
         string content = ConvertResponseContentJSON(response);
+
+        MeLogger.WriteMessage($"Получили ответ:{content}");
 
         switch (isPay)
         {
@@ -48,22 +53,27 @@ namespace InterFaceEkassir.Basic.Provider.Adapter
       }
       catch (Exception err)
       {
+        MeLogger.WriteMessage($"Получили ответ:{err.ToString()}");
         throw new Exception(err.ToString());
       }
     }
 
-    private static string ConvertResponseContentJSON(RestResponse response)
+    private static string ConvertResponseContentJSON(IRestResponse response)
     {
       return JsonConvert.DeserializeObject<string>(response.Content);
     }
 
-    private static void CorrectStatusCode(RestResponse response)
+    private static void CorrectStatusCode(IRestResponse response)
     {
-      if (response.StatusCode != HttpStatusCode.OK)
-        throw new Exception(response.ErrorException.ToString() + response.Content != null ? response.Content : "");
+      if(response == null)
+        throw new Exception("Пустой ответ от сервера!");
 
       if (response.Content == "" || response.Content == null)
         throw new Exception("Пустой ответ от сервера!");
+
+      if (response.StatusCode != HttpStatusCode.OK)
+        throw new Exception(response.Content);
+
 
     }
   }

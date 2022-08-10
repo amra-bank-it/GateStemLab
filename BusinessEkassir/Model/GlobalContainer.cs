@@ -1,4 +1,5 @@
-﻿using IBP.SDKGatewayLibrary;
+﻿using ComplexLogger;
+using IBP.SDKGatewayLibrary;
 using System;
 using System.Collections;
 using System.Reflection;
@@ -19,6 +20,7 @@ namespace Provider.Model
     /// </summary>
     public static void ClearContext()
     {
+      MeLogger.WriteMessage("Очистка глобального контекста ");
       srvFields = new ServerFields();
       cliFields = new ClientFields();
       settFields = new SettingFields();
@@ -30,6 +32,8 @@ namespace Provider.Model
     /// <param name="inContext"></param>
     public static void ContextToGlobalContainer<T>(T inContext) where T : Hashtable
     {
+      MeLogger.WriteMessage("Конвертация из контекста Екассира -> Глобальный контекст");
+
       var GlbConAll = typeof(GlobalContainer).GetProperties();
 
       //Обходим каждое свойство в классе GlobalContainer
@@ -43,11 +47,13 @@ namespace Provider.Model
         //Если свойство равно нулл то создаем экземпляр объекта в статичном свойстве, для последующего заполнения, иначе передаем уже созданный экземпляр
         object outerPropertyValue = GetOuterPropertyValue(refPropGlbCon, typePropGlbCon);
 
-
+        
         //Обходим каждое свойство, вложенного свойства класса GlobalContainer
         foreach (PropertyInfo propInnerObject in typePropGlbCon.GetProperties())
         {
           object Name = null;
+
+
           if (typeof(T) == typeof(Hashtable))
           {
             Name = propInnerObject.Name;
@@ -57,13 +63,24 @@ namespace Provider.Model
             Name = PaymentContext(propInnerObject.Name);
           }
 
-          var TextValue = inContext[Name];
+
+          var TextValue = inContext[Name.ToString()];
 
           if (TextValue == null)
             continue;
 
 
-          Object innerPropertyValue = Convert.ChangeType(TextValue, propInnerObject.PropertyType);
+
+
+          Object innerPropertyValue = null;
+          try
+          {
+            innerPropertyValue = Convert.ChangeType(TextValue, propInnerObject.PropertyType);
+          }
+          catch (Exception err)
+          {
+            MeLogger.WriteMessage($"???ERORR-Convert.ChangeType:ContextName:{Name} Value:{TextValue.ToString()}. {err.ToString()}");
+          }
 
           propInnerObject.SetValue(outerPropertyValue, innerPropertyValue, null);
         }
@@ -73,6 +90,7 @@ namespace Provider.Model
         propGlbCon.SetValue(typeof(GlobalContainer).GetProperties(), outerPropertyValue, null);
       }
     }
+
 
     private static object GetOuterPropertyValue(object refPropGlbCon, Type typePropGlbCon)
     {
@@ -85,6 +103,8 @@ namespace Provider.Model
     /// <param name="inContext"></param>
     public static void WriteContext(ref Context inContext)
     {
+      MeLogger.WriteMessage("Конвертация из контекста Глобальный контекст -> Екассир");
+
       PropertyInfo[] propGC = typeof(GlobalContainer).GetProperties();
       foreach (PropertyInfo prop in propGC)
       {
@@ -108,6 +128,7 @@ namespace Provider.Model
 
     public static string PaymentContext(string field)
     {
+
       if ("Account,Value,Id,Serial,Number,Total,".IndexOf(field + ",") >= 0)
         return "PaymentContext.Payment." + field;
       else if ("Fee,".IndexOf(field + ",") >= 0)

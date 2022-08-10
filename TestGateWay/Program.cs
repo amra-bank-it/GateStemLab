@@ -1,9 +1,9 @@
-﻿using ComplexLogger;
+﻿using BusinessEkassir_sett;
+using ComplexLogger;
 using IBP.SDKGatewayLibrary;
-using Provider;
-using BusinessEkassir_sett;
-using Provider.Model;
 using Oracle.ManagedDataAccess.Client;
+using Provider;
+using Provider.Model;
 using System;
 using System.Collections;
 //using Provider.Exceptions;
@@ -16,19 +16,16 @@ namespace TestGateWay
 
         static void Main(string[] args)
         {
-            for (int ttt = 100000; ttt < 100010; ttt++)
+            for (int ttt = 100000; ttt < 100100; ttt++)
             {
 
                 try
                 {
-                    mLogger.changeMode(L_Mode.TestPlatform);
-                    mLogger.WriteMessage("Платеж:"+ ttt);
                     //User us = new User();
                     //us.oo();
                     //return;
 
 
-                    mLogger.WriteMessage("нач:" + DateTime.Now.ToString());
 
                     GatewayCore gateway = new GatewayCore();
                     Context context = new Context();
@@ -45,28 +42,30 @@ namespace TestGateWay
                     //context.Add(contextServices.PaymentContext("Purpose"), "Блокируем потому что так надо было (тесты)");
 
                     Hashtable RFR = new Hashtable();
-                    RFR.Add("userName", "dameyjonua@yandex.ru");
-                    RFR.Add("apiKey", "1dcf4102-bdf2-11eb-b74c-ac1f6b4782be");
-                    RFR.Add("apiURL", "https://localhost:7267");
-                    RFR.Add("TraceLog", "0");
+          RFR.Add("userName", "dameyjonua@yandex.ru");
+          RFR.Add("payer_name", "TestAmra");
+          RFR.Add("apiKey", "1dcf4102-bdf2-11eb-b74c-ac1f6b4782be");
+                    RFR.Add("apiURL", "http://10.55.31.89:1045");
+                    RFR.Add("TraceLog", "1");
                     RFR.Add("SentryUrl", @"https://932e9e7e53db416ca2502fb326160a2c@sentry.asar.studio/17");
                     
 
                     //Тестируем работу модуля настройки шлюза
                     SettingManager settingM = new SettingManager();
                     settingM.InitSettingManadger("");
-
-                    //Тестируем работу модуля инициализации шлюза
-                    gateway.InitGateway(RFR);
+          settingM.GetPaymentContextKeys(Operation.CheckAccount);
+          settingM.GetPaymentContextKeys(Operation.Process);
+          //Тестируем работу модуля инициализации шлюза
+          gateway.InitGateway(RFR,TypeModeLogger.sourcePrint.Console);
 
                     //Тестируем работу проведения платежа
-                    gateway.CheckAccount(ref context);
-                    gateway.Process(ref context);
+                     gateway.CheckAccount(ref context);
+                    //gateway.Process(ref context);
 
-
+            
                     int rer = 0;
     
-                    mLogger.WriteMessage("кон:" + DateTime.Now.ToString());
+                    MeLogger.WriteMessage("кон:" + DateTime.Now.ToString());
 
                 }
                 catch (Exception e)
